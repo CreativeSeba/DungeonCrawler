@@ -266,46 +266,4 @@ public class Graph {
         }
         return minimalneDrzewo;
     }
-    public int minimalChromaticNumber() {
-        if (nodes.isEmpty()) return 0;
-
-        HashMap<Node, Integer> colorMap = new HashMap<>();
-        colorMap.put(nodes.getFirst(), 0);
-
-        for (int i = 1; i < nodes.size(); i++) {
-            Node node = nodes.get(i);
-            Set<Integer> usedColors = new HashSet<>();
-            for (Edge edge : edges) {
-                if (edge.v1 == node) {
-                    Node neighbor = edge.v2;
-                    if (colorMap.containsKey(neighbor)) {
-                        usedColors.add(colorMap.get(neighbor));
-                    }
-                } else if (edge.v2 == node) {
-                    Node neighbor = edge.v1;
-                    if (colorMap.containsKey(neighbor)) {
-                        usedColors.add(colorMap.get(neighbor));
-                    }
-                }
-            }
-
-            int cr;
-            for (cr = 0; cr < nodes.size(); cr++) {
-                if (!usedColors.contains(cr)) {
-                    break;
-                }
-            }
-
-            colorMap.put(node, cr);
-        }
-
-        int maxColor = 0;
-        for (int color : colorMap.values()) {
-            if (color > maxColor) {
-                maxColor = color;
-            }
-        }
-
-        return maxColor + 1;
-    }
 }

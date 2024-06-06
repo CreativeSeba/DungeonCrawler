@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class DungeonCrawler extends ApplicationAdapter {
+	Graph graph = new Graph();
 	private int screenWidth, screenHeight;
 	private int tileSize;
 	private int playerTileX, playerTileY;
@@ -142,6 +143,10 @@ public class DungeonCrawler extends ApplicationAdapter {
 		if (!dungeonMap.containsKey(key)) {
 			// Adjust the 0.3 to change the density of walls
 			dungeonMap.put(key, random.nextDouble() < 0.3 ? 1 : 0);
+			if(dungeonMap.get(key)==0){
+				graph.addNode(key);
+				graph.printGraph();
+			}
 		}
 	}
 
