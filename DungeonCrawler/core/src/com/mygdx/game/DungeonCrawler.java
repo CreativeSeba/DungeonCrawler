@@ -9,11 +9,14 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class DungeonCrawler extends ApplicationAdapter {
 	Graph graph = new Graph();
+	private ArrayList<Integer> road = new ArrayList<>();
 	private int screenWidth, screenHeight;
 	private int tileSize;
 	private int playerTileX, playerTileY;
@@ -104,7 +107,26 @@ public class DungeonCrawler extends ApplicationAdapter {
 				System.out.println("Wall!");
 			} else if (clickedTile == 0) {
 				// If the clicked tile is a floor
+				Node start = null;
+				Node end = null;
+				for (int i = 0; i < graph.nodes.size(); i++) {
+					Node node = graph.nodes.get(i);
+					if(node.name.equals(playerTileX+","+playerTileY)){
+						start = node;
+					}
+					else if(node.name.equals(tileX+","+tileY)){
+						end = node;
+					}
+				}
 				System.out.println("Floor! x: " +tileX+" y: "+tileY);
+				if (start == null || end == null) {
+					System.out.println("Start or end node not found in the graph");
+				} else {
+					road = graph.shortestPath(start.id, end.id);
+					for (int i = 0; i < road.size(); i++) {
+						System.out.println(graph.nodes.get(road.get(i)).name);
+					}
+				}
 			} else {
 				// If the clicked tile is unexplored or out of bounds
 				System.out.println("Out of bounds or unexplored area!");
@@ -141,11 +163,28 @@ public class DungeonCrawler extends ApplicationAdapter {
 	private void generateTile(int x, int y) {
 		String key = x + "," + y;
 		if (!dungeonMap.containsKey(key)) {
-			// Adjust the 0.3 to change the density of walls
-			dungeonMap.put(key, random.nextDouble() < 0.3 ? 1 : 0);
+			// If the tile is at (0,0), set it as a floor tile
+			if (x == 0 && y == 0) {
+				dungeonMap.put(key, 0);
+			} else {
+				// Adjust the 0.3 to change the density of walls
+				dungeonMap.put(key, random.nextDouble() < 0.3 ? 1 : 0);
+			}
 			if(dungeonMap.get(key)==0){
-				graph.addNode(key);
-				graph.printGraph();
+				Node node = graph.addNode(key);
+				for (int i = 0; i < graph.nodes.size(); i++) {
+					Node checkNode = graph.nodes.get(i);
+					String[] nodeCoordinates = node.name.split(",");
+					String[] checkNodeCoordinates = checkNode.name.split(",");
+					int nodeX = Integer.parseInt(nodeCoordinates[0]);
+					int nodeY = Integer.parseInt(nodeCoordinates[1]);
+					int checkNodeX = Integer.parseInt(checkNodeCoordinates[0]);
+					int checkNodeY = Integer.parseInt(checkNodeCoordinates[1]);
+					if((Math.abs(nodeX - checkNodeX) == 1 && nodeY == checkNodeY) ||
+							(Math.abs(nodeY - checkNodeY) == 1 && nodeX == checkNodeX)){
+						graph.addEdge(1, node.id, checkNode.id);
+					}
+				}
 			}
 		}
 	}
@@ -190,6 +229,16 @@ public class DungeonCrawler extends ApplicationAdapter {
 				}
 				shapeRenderer.rect(x * tileSize, y * tileSize, tileSize, tileSize);
 			}
+		}
+
+
+		shapeRenderer.setColor(1, 0, 0, 1);
+		for (Integer nodeId : road) {
+			Node node = graph.nodes.get(nodeId);
+			String[] coordinates = node.name.split(",");
+			int x = Integer.parseInt(coordinates[0]);
+			int y = Integer.parseInt(coordinates[1]);
+			shapeRenderer.rect(x * tileSize, y * tileSize, tileSize, tileSize);
 		}
 
 		// Render player

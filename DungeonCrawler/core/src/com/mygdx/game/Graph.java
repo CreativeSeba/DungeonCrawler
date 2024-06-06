@@ -86,7 +86,7 @@ public class Graph {
         return null;
     }
 
-    public int findRoad(int id1, int id2) {
+    public ArrayList<Integer> shortestPath(int id1, int id2) {
         HashMap<Integer, Integer> nodeDistance = new HashMap<>();
         ArrayList<Integer> visitedNodes = new ArrayList<>();
         HashMap<Integer, Integer> previousNodes = new HashMap<>();
@@ -119,151 +119,21 @@ public class Graph {
         }
         if (nodeDistance.get(id2) == Integer.MAX_VALUE) {
             System.out.println("\nNo path exists from node " + id1 + " to node " + id2);
-            return 0;
+            return new ArrayList<>();
         }
         currentNodeId = id2;
         String path = "" + id2;
         System.out.println("\nShortest path from node " + id1 + " to node " + id2 + ":");
+        ArrayList<Integer> pathList = new ArrayList<>();
         while (currentNodeId != id1 && previousNodes.containsKey(currentNodeId)) {
+            pathList.add(currentNodeId);
             currentNodeId = previousNodes.get(currentNodeId);
-            path = currentNodeId + " -> " + path;
         }
+        pathList.add(currentNodeId);
         System.out.println(path);
         System.out.println("Distance from node " + id1 + " to node " + id2 + " is " + nodeDistance.get(id2));
 
-        return nodeDistance.get(id2);
+        return pathList;
     }
 
-    public LinkedHashMap<Edge, ArrayList<Node>> algorytmKruskala() {
-        ArrayList<Edge> sortedEdges = new ArrayList<>();
-        LinkedHashMap<Edge, ArrayList<Node>> minimalneDrzewo = new LinkedHashMap<>();
-        System.out.println("\nMinimalne drzewo rozpinające Kruskala: \n");
-
-        for (Edge edge : edges) {
-            sortedEdges.add(edge);
-        }
-        Collections.sort(sortedEdges, Comparator.comparingInt(edge -> edge.weight));
-
-        for (Edge edge : sortedEdges) {
-            ArrayList<Node> nodeList = new ArrayList<>();
-            for (Node node : nodes) {
-                if (node.id == edge.id1 || node.id == edge.id2) {
-                    nodeList.add(node);
-                }
-            }
-            boolean cycle = false;
-            for (Map.Entry<Edge, ArrayList<Node>> entry : minimalneDrzewo.entrySet()) {
-                ArrayList<Node> value = entry.getValue();
-                if (nodeList.size() > 1 && value.contains(nodeList.get(1))) {
-                    nodeList.remove(value.get(1));
-                }
-                if (nodeList.size() > 0 && value.contains(nodeList.get(0))) {
-                    nodeList.remove(nodeList.get(0));
-                }
-                if (nodeList.isEmpty()) {
-                    cycle = true;
-                    break;
-                }
-            }
-
-            if (!cycle) {
-                boolean isConnected = false;
-                for (Edge edgeConnected : edges) {
-                    if (edgeConnected.equals(edge)) {
-                        continue;
-                    }
-                    if (edge.id1 == edgeConnected.id1 || edge.id1 == edgeConnected.id2 || edge.id2 == edgeConnected.id1 || edge.id2 == edgeConnected.id2) {
-                        isConnected = true;
-                        break;
-                    }
-                }
-                if (isConnected) {
-                    minimalneDrzewo.put(edge, nodeList);
-                }
-                else {
-                    System.out.println("Edge id1: " + edge.id1 + " | id2: " + edge.id2 + " is not connected to other edges!");
-                }
-            }
-            else {
-                System.out.println("Edge id1: " + edge.id1 + " | id2: " + edge.id2 + " created a cycle!");
-            }
-        }
-        for (Map.Entry<Edge, ArrayList<Node>> entry : minimalneDrzewo.entrySet()) {
-            ArrayList<Node> value = entry.getValue();
-            Edge key = entry.getKey();
-            if (value.size() == 1) {
-                System.out.println("Edge weight: " + key.weight + " | Node: " + value.get(0).id);
-            }
-            else {
-                System.out.println("\nEdge weight: " + key.weight + " | Node: " + value.get(0).id + " " + value.get(1).id);
-            }
-        }
-        return minimalneDrzewo;
-    }
-    public LinkedHashMap<Edge, ArrayList<Node>> algorytmPrima() {
-        LinkedHashMap<Edge, ArrayList<Node>> minimalneDrzewo = new LinkedHashMap<>();
-        System.out.println("\nMinimalne drzewo rozpinające Prima: \n");
-        for(Node node : nodes){
-            HashSet <Edge> conncectedEdges = new HashSet<>();
-
-            for(Edge edge : edges){
-                if (node.id == edge.id1 || node.id == edge.id2) {
-                    conncectedEdges.add(edge);
-                }
-            }
-            Edge smallestEdge = Collections.min(conncectedEdges, Comparator.comparingInt(edge -> edge.weight));
-            ArrayList<Node> nodeList = new ArrayList<>();
-            for (Node node1 : nodes) {
-                if (node1.id == smallestEdge.id1 || node1.id == smallestEdge.id2) {
-                    nodeList.add(node1);
-                }
-            }
-            boolean cycle = false;
-            for (Map.Entry<Edge, ArrayList<Node>> entry : minimalneDrzewo.entrySet()) {
-                ArrayList<Node> value = entry.getValue();
-                if (nodeList.size() > 1 && value.contains(nodeList.get(1))) {
-                    nodeList.remove(value.get(1));
-                }
-                if (nodeList.size() > 0 && value.contains(nodeList.get(0))) {
-                    nodeList.remove(nodeList.get(0));
-                }
-                if (nodeList.isEmpty()) {
-                    cycle = true;
-                    break;
-                }
-            }
-            if (!cycle) {
-                boolean isConnected = false;
-                for (Edge edgeConnected : edges) {
-                    if (edgeConnected.equals(smallestEdge)) {
-                        continue;
-                    }
-                    if (smallestEdge.id1 == edgeConnected.id1 || smallestEdge.id1 == edgeConnected.id2 || smallestEdge.id2 == edgeConnected.id1 || smallestEdge.id2 == edgeConnected.id2) {
-                        isConnected = true;
-                        break;
-                    }
-                }
-                if (isConnected) {
-                    minimalneDrzewo.put(smallestEdge, nodeList);
-                }
-                else {
-                    System.out.println("Edge id1: " + smallestEdge.id1 + " | id2: " + smallestEdge.id2 + " is not connected to other edges!");
-                }
-            }
-            else {
-                System.out.println("Edge id1: " + smallestEdge.id1 + " | id2: " + smallestEdge.id2 + " created a cycle!");
-            }
-        }
-        for (Map.Entry<Edge, ArrayList<Node>> entry : minimalneDrzewo.entrySet()) {
-            ArrayList<Node> value = entry.getValue();
-            Edge key = entry.getKey();
-            if (value.size() == 1) {
-                System.out.println("Edge weight: " + key.weight + " | Node: " + value.get(0).id);
-            }
-            else {
-                System.out.println("\nEdge weight: " + key.weight + " | Node: " + value.get(0).id + " " + value.get(1).id);
-            }
-        }
-        return minimalneDrzewo;
-    }
 }
