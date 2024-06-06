@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.Vector3;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -86,6 +87,29 @@ public class DungeonCrawler extends ApplicationAdapter {
 		if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN) || Gdx.input.isKeyJustPressed(Input.Keys.S)) {
 			movePlayer(0, -1);
 		}
+		if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+			int screenX = Gdx.input.getX();
+			int screenY = Gdx.input.getY();
+			Vector3 worldCoordinates = camera.unproject(new Vector3(screenX, screenY, 0));
+
+			// Convert world coordinates to tile coordinates
+			int tileX = (int) Math.floor(worldCoordinates.x / tileSize);
+			int tileY = (int) Math.floor(worldCoordinates.y / tileSize);
+
+			// Check the type of tile at the clicked position
+			int clickedTile = getTile(tileX, tileY);
+			if (clickedTile == 1) {
+				// If the clicked tile is a wall
+				System.out.println("Wall!");
+			} else if (clickedTile == 0) {
+				// If the clicked tile is a floor
+				System.out.println("Floor! x: " +tileX+" y: "+tileY);
+			} else {
+				// If the clicked tile is unexplored or out of bounds
+				System.out.println("Out of bounds or unexplored area!");
+			}
+		}
+
 	}
 
 	private void movePlayer(int deltaX, int deltaY) {
@@ -136,6 +160,18 @@ public class DungeonCrawler extends ApplicationAdapter {
 		// Render visible portion of the map
 		for (int y = playerTileY - halfScreenHeight - 3; y <= playerTileY + halfScreenHeight + 3; y++) {
 			for (int x = playerTileX - halfScreenWidth - 3; x <= playerTileX + halfScreenWidth + 3; x++) {
+				// Skip rendering the wall at (0, 0)
+				if (x == 0 && y == 0 && getTile(x, y) == 1) {
+					continue;
+				}
+
+				// Render floor at (0, 0)
+				if (x == 0 && y == 0) {
+					shapeRenderer.setColor(0.5f, 0.5f, 0.5f, 1);
+					shapeRenderer.rect(x * tileSize, y * tileSize, tileSize, tileSize);
+					continue;
+				}
+
 				int tile = getTile(x, y);
 				if (tile == 1) {
 					// Render wall
@@ -157,6 +193,8 @@ public class DungeonCrawler extends ApplicationAdapter {
 
 		shapeRenderer.end();
 	}
+
+
 
 	@Override
 	public void dispose() {
