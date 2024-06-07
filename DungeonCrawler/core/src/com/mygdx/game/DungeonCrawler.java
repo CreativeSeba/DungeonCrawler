@@ -8,11 +8,9 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Timer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class DungeonCrawler extends ApplicationAdapter {
 	Graph graph = new Graph();
@@ -24,6 +22,7 @@ public class DungeonCrawler extends ApplicationAdapter {
 	private OrthographicCamera camera;
 	private HashMap<String, Integer> dungeonMap;
 	private Random random;
+	private Timer.Task currentTask;
 	@Override
 	public void create() {
 		screenWidth = Gdx.graphics.getWidth();
@@ -119,13 +118,40 @@ public class DungeonCrawler extends ApplicationAdapter {
 					}
 				}
 				System.out.println("Floor! x: " +tileX+" y: "+tileY);
+
 				if (start == null || end == null) {
 					System.out.println("Start or end node not found in the graph");
 				} else {
 					road = graph.shortestPath(start.id, end.id);
+					Collections.reverse(road); // Reverse the road list
 					for (int i = 0; i < road.size(); i++) {
 						System.out.println(graph.nodes.get(road.get(i)).name);
 					}
+
+					// Cancel the current task if it exists
+					if (currentTask != null) {
+						currentTask.cancel();
+					}
+
+					// Schedule the task here
+					currentTask = Timer.schedule(new Timer.Task() {
+						@Override
+						public void run() {
+							if (!road.isEmpty()) {
+								Node nextNode = graph.nodes.get(road.get(0));
+								String[] coordinates = nextNode.name.split(",");
+								playerTileX = Integer.parseInt(coordinates[0]);
+								playerTileY = Integer.parseInt(coordinates[1]);
+								road.remove(0);
+
+								// Generate surrounding tiles if they haven't been generated yet
+								generateSurroundingTiles(playerTileX, playerTileY, 2);
+							} else {
+								// Cancel the task when there are no more tiles in the path
+								this.cancel();
+							}
+						}
+					}, 0, 0.15f);
 				}
 			} else {
 				// If the clicked tile is unexplored or out of bounds
