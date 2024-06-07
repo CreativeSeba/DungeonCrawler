@@ -5,6 +5,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Vector3;
@@ -23,6 +26,10 @@ public class DungeonCrawler extends ApplicationAdapter {
 	private HashMap<String, Integer> dungeonMap;
 	private Random random;
 	private Timer.Task currentTask;
+	private BitmapFont font;
+	private SpriteBatch batch;
+	private String message;
+	private GlyphLayout layout;
 	@Override
 	public void create() {
 		screenWidth = Gdx.graphics.getWidth();
@@ -46,6 +53,12 @@ public class DungeonCrawler extends ApplicationAdapter {
 
 		// Ensure initial tiles are generated
 		generateSurroundingTiles(playerTileX, playerTileY, 3);
+		font = new BitmapFont();
+		font.setColor(1, 1, 1, 1); // Set the color of the font to white
+		batch = new SpriteBatch();
+		message = "";
+
+		layout = new GlyphLayout();
 	}
 
 	@Override
@@ -74,6 +87,25 @@ public class DungeonCrawler extends ApplicationAdapter {
 
 		// Render the dungeon map
 		renderDungeon();
+
+		float playerScreenX = (playerTileX + 0.5f) * tileSize;
+		float playerScreenY = (playerTileY + 0.5f) * tileSize;
+
+		// Add an offset to move the text above the player
+		float textScreenY = playerScreenY + 2 * tileSize; // Increase the offset to move the text further above the player
+
+		// Calculate the width and height of the text
+		layout.setText(font, message);
+		float textWidth = layout.width;
+		float textHeight = layout.height;
+
+		// Calculate the x-coordinate to center the text
+		float textScreenX = playerScreenX - textWidth / 2;
+
+		batch.setProjectionMatrix(camera.combined);
+		batch.begin();
+		font.draw(batch, message, textScreenX, textScreenY+100); // Draw the message centered and slightly above the player
+		batch.end();
 	}
 
 
@@ -102,10 +134,18 @@ public class DungeonCrawler extends ApplicationAdapter {
 			// Check the type of tile at the clicked position
 			int clickedTile = getTile(tileX, tileY);
 			if (clickedTile == 1) {
-				// If the clicked tile is a wall
-				System.out.println("Wall!");
-			} else if (clickedTile == 0) {
+				message = "You can't go there!";
+				Timer.schedule(new Timer.Task() {
+					@Override
+					public void run() {
+						message = "";
+					}
+				}, 3);
+			}// Clear the message after 3 seconds
+				else if (clickedTile == 0) {
 				// If the clicked tile is a floor
+				message = "";
+
 				Node start = null;
 				Node end = null;
 				for (int i = 0; i < graph.nodes.size(); i++) {
@@ -123,6 +163,15 @@ public class DungeonCrawler extends ApplicationAdapter {
 					System.out.println("Start or end node not found in the graph");
 				} else {
 					road = graph.shortestPath(start.id, end.id);
+					if(road.isEmpty()){
+						message = "You can't go there!";
+						Timer.schedule(new Timer.Task() {
+							@Override
+							public void run() {
+								message = "";
+							}
+						}, 3); // Clear the message after 3 seconds
+					}
 					Collections.reverse(road); // Reverse the road list
 					for (int i = 0; i < road.size(); i++) {
 						System.out.println(graph.nodes.get(road.get(i)).name);
@@ -156,6 +205,13 @@ public class DungeonCrawler extends ApplicationAdapter {
 			} else {
 				// If the clicked tile is unexplored or out of bounds
 				System.out.println("Out of bounds or unexplored area!");
+					message = "Out of bounds or unexplored area!";
+					Timer.schedule(new Timer.Task() {
+						@Override
+						public void run() {
+							message = "";
+					}
+				}, 3); // Clear the message after 3 seconds
 			}
 		}
 
